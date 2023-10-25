@@ -1,5 +1,0 @@
----
-chrony::clientlog: true
-chrony::config_keys_mode: '0644'
-chrony::package_name: net-misc/chrony
-chrony::rtconutc: true

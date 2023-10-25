@@ -1,165 +1,202 @@
-# puppet-chrony
+#puppet-chrony
 
-[![License](https://img.shields.io/github/license/voxpupuli/puppet-chrony.svg)](https://github.com/voxpupuli/puppet-chrony/blob/master/LICENSE)
-[![Build Status](https://secure.travis-ci.org/voxpupuli/puppet-chrony.png?branch=master)](http://travis-ci.org/voxpupuli/puppet-chrony)
-[![Puppet Forge](https://img.shields.io/puppetforge/v/puppet/chrony.svg?style=flat)](https://forge.puppetlabs.com/puppet/chrony)
-[![Puppet Forge - downloads](https://img.shields.io/puppetforge/dt/puppet/chrony.svg?style=flat)](https://forge.puppetlabs.com/puppet/chrony)
-[![Puppet Forge - scores](https://img.shields.io/puppetforge/f/puppet/chrony.svg?style=flat)](https://forge.puppetlabs.com/puppet/chrony)
+[![Build Status](https://secure.travis-ci.org/aboe76/puppet-chrony.png?branch=master)](http://travis-ci.org/aboe76/puppet-chrony)
 
-## Table of Contents
+####Table of Contents
 
 1. [Overview](#overview)
-1. [Module Description - What the module does and why it is useful](#module-description)
-1. [Setup - The basics of getting started with chrony](#setup)
-   - [What chrony affects](#what-chrony-affects)
-   - [Setup requirements](#setup-requirements)
-   - [Beginning with chrony](#beginning-with-chrony)
-1. [Usage - Configuration options and additional functionality](#usage)
-1. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
-1. [Limitations - OS compatibility, etc.](#limitations)
-1. [Copyright and License](#copyright-and-license)
+2. [Module Description - What the module does and why it is useful](#module-description)
+3. [Setup - The basics of getting started with chrony](#setup)
+    * [What chrony affects](#what-chrony-affects)
+    * [Setup requirements](#setup-requirements)
+    * [Beginning with chrony](#beginning-with-chrony)
+4. [Usage - Configuration options and additional functionality](#usage)
+5. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
+5. [Limitations - OS compatibility, etc.](#limitations)
 
 ## Overview
 
-### Chrony Puppet Module
+#### Chrony Puppet Module
 
 Manage chrony time daemon on Archlinux and Redhat
 
-## Module Description
+
+##Module Description
 
 The Chrony module handles running chrony in Archlinux and Redhat systems
-with systemd.
+with systemd. 
 
-## Setup
+##Setup
 
-### What chrony affects
+###What chrony affects
 
-- chrony package.
-- chrony configuration file.
-- chrony key file.
-- chrony service.
+ * chrony package.
+ * chrony configuration file.
+ * chrony key file.
+ * chrony service.
+ 
+###Beginning with chrony
 
-### Requirements
-
-Please review `metadata.json` for a list of requirements.
-
-### Beginning with chrony
-
-`include 'chrony'` is all you need to get it running. If you
+include '::chrony' is all you need to get it running. If you
 wish to pass in parameters like which servers to use
 then you can use:
 
 ```puppet
-class { 'chrony':
+class { '::chrony':
   servers => ['ntp1.corp.com', 'ntp2.corp.com' ],
 }
 ```
 
-## Usage
+##Usage
 
 All interaction with the chrony module can be done through
 the main chrony class.
 
-### I just want chrony, what's the minimum I need?
+###I just want chrony, what's the minimum I need?
 
 ```puppet
-include 'chrony'
+include '::chrony'
 ```
 
-### I just want to tweak the servers, nothing else
+###I just want to tweak the servers, nothing else.
 
 ```puppet
-class { 'chrony':
+class { '::chrony':
   servers => [ 'ntp1.corp.com', 'ntp2.corp.com', ],
 }
 ```
 
-### I'd like to make sure a secret password is used for chronyc
-
+###I'd like to make sure a secret password is used for chronyc:
 ```puppet
-class { 'chrony':
+class { '::chrony':
   servers         => [ 'ntp1.corp.com', 'ntp2.corp.com', ],
   chrony_password => 'secret_password',
 }
 ```
 
-### I'd like to use NTP authentication
-
+###I'd like to use NTP authentication:
 ```puppet
-class { 'chrony':
-  keys    => ['25 SHA1 HEX:1dc764e0791b11fa67efc7ecbc4b0d73f68a070c'],
-  servers => {
+class { '::chrony':
+  keys            => [
+    '25 SHA1 HEX:1dc764e0791b11fa67efc7ecbc4b0d73f68a070c',
+  ],
+  servers         => {
     'ntp1.corp.com' => ['key 25', 'iburst'],
     'ntp2.corp.com' => ['key 25', 'iburst'],
   },
 }
 ```
 
-### I'd like chronyd to auto generate a command key at startup
-
+###I'd like chronyd to auto generate a command key at startup:
 ```puppet
-class { 'chrony':
+class { '::chrony':
    chrony_password    => 'unset',
    config_keys_manage => false,
 }
 ```
 
-### Allow some hosts
-
+###Allow some hosts
 ```puppet
-class { 'chrony':
+class { '::chrony':
   queryhosts  => [ '192.168/16', ],
 }
 ```
 
-### How to configure leap second
+##Reference
 
-```puppet
-class { 'chrony':
-  leapsecmode  => 'slew',
-  smoothtime   => '400 0.001 leaponly',
-  maxslewrate  => 1000.0
-}
-```
+###Classes
+ * chrony: Main class, includes all the rest.
+ * chrony::install: Handles the packages.
+ * chrony::config: Handles the configuration and key file.
+ * chrony::service: Handles the service.
 
-### Enable chrony-wait.service
-RedHat and Suse provide a default disabled `chrony-wait.service` to block the `time-sync.target`
-until node is synchronised.
+###Parameters
 
-To enable it:
+The following parameters are available in the chrony module
 
-```puppet
-class { 'chrony':
-  wait_enable => true,
-  wait_ensure => true,
-}
-```
+####`chrony_password`
 
-## Reference
+This sets the chrony password to be used in the key file. 
+By default a short fixed string is used. If set explicitly
+to 'unset' then no password will setting will be added 
+to the keys file by puppet.
 
-Reference documentation for the chrony module is generated using
-[puppet-strings](https://puppet.com/docs/puppet/latest/puppet_strings.html) and
-available in [REFERENCE.md](REFERENCE.md)
+####`commandkey`
 
-## Limitations
+This sets the key ID used by chronyc to authenticate to chronyd.
 
-This module has been built on and tested against Puppet 5.5 and higher.
+####`config`
+
+This sets the file to write chrony configuration into.
+
+####`config_template`
+
+This determines which template puppet should use for the chrony configuration.
+
+####`config_keys`
+
+This sets the file to write chrony keys into.
+
+####`config_keys_owner`
+
+Specify unix owner of chrony keys file, defaults to 0.
+
+####`config_keys_group`
+
+Specify unix group of chrony keys files, defaults to 0 on ArchLinux
+and chrony on Redhat.
+
+####`config_keys_mode`
+
+Specify unix mode of chrony keys files, defaults to 0644 on ArchLinux
+and 0640 on Redhat.
+
+####`config_keys_template`
+
+This determines which template puppet should use for the chrony key file.
+
+####`keys`
+
+An array of key lines.  These are printed as-is into the chrony key file.
+
+####`package_ensure`
+
+This can be set to 'present' or 'latest' or a specific version to choose the
+chrony package to be installed.
+
+####`package_name`
+
+This determines the name of the package to install.
+
+####`servers`
+
+This selects the servers to use for ntp peers.  It can be an array of servers
+or a hash of servers to their respective options.
+
+####`queryhosts`
+
+This adds the networks, hosts that are allowed to query the daemon.
+
+####`service_enable`
+
+This determines if the service should be enabled at boot.
+
+####`service_ensure`
+
+This determines if the service should be running or not.
+
+####`service_manage`
+
+This selects if puppet should manage the service in the first place.
+
+####`service_name`
+
+This selects the name of the chrony service for puppet to manage.
+
+##Limitations
+
+This module has been built on and tested against Puppet 3.2.3 and higher.
 
 The module has been tested on:
-
-- Arch Linux
-- Red Hat
-- Debian 9, 10
-- Ubuntu 18.04, 20.04
-- Suse 12.3
-- Gentoo 2.7
-
-## Copyright and License
-
-This module is distributed under the [Apache License 2.0](LICENSE). Copyright
-belongs to the module's authors, including Niels Abspoel and
-[others](https://github.com/voxpupuli/puppet-chrony/graphs/contributors).
-
-The module was originally written by [Niels Abspoel](https://github.com/aboe76)
-and released as [aboe76/chrony](https://forge.puppet.com/aboe/chrony).
-Since version 0.4.0, it is maintained by [Vox Pupuli](https://voxpupuli.org/).
+ * Arch Linux
+ * Red Hat
